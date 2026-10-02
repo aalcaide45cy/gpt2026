@@ -1,0 +1,11 @@
+OCR Trabajo — instalación en Chrome o Edge
+1. Descomprime el ZIP en una carpeta de tu ordenador.
+2. Abre chrome://extensions o edge://extensions.
+3. Activa Modo de desarrollador y pulsa Cargar descomprimida.
+4. Selecciona la carpeta que contiene manifest.json.
+5. Recarga la intranet y https://gpt2026.vercel.app/ocrtrabajo/.
+6. Inicia sesión con Google tú mismo. Abre Crear expediente.
+7. En cada pestaña del expediente, pulsa Reconocer campos en la extensión.
+8. Vuelve a OCR Trabajo, importa los campos, procesa documentos y asigna datos.
+
+La versión inicial reconoce los controles HTML estándar visibles. Las pestañas con role=tab e identificador estable pueden recorrerse durante el rellenado. Otros controles personalizados, paneles sin semántica de pestaña y adjuntos requieren adaptación tras revisar un formulario real. No pulsa Guardar ni crea el expediente automáticamente. No lee contraseñas, cookies ni valores existentes. La configuración se guarda localmente; los documentos y datos OCR permanecen en memoria. La extensión no usa un servidor para el intercambio.

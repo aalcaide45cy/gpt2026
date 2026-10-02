@@ -27,3 +27,13 @@ Vercel publica la rama `main`. `vercel.json` configura una compilación estátic
 Todos los archivos raster publicados son WebP. Se incluyen imágenes temáticas específicas de los 45 gremios y recursos para el blog, generados para esta demostración; no son fotografías de empresas reales. El logotipo es una recreación a partir de la referencia, no una vectorización exacta. No se utiliza la fotografía del llavero ni se publica información de contacto inventada.
 
 La web de prueba anterior se reemplaza por completo en el árbol actual. El historial Git se conserva para poder revertir y mantener la conexión con Vercel.
+
+## OCR Trabajo · `/ocrtrabajo/`
+
+Interfaz para OCR local de pedidos y DNI con Tesseract.js (español) y PDF.js. Motor, modelo y workers se sirven desde el propio sitio; los archivos se procesan en el navegador. No hay API de subida. Solo la plantilla de etiquetas y asignaciones se guarda en localStorage; documentos, texto y valores OCR se mantienen en memoria. Descargar una plantilla exporta las reglas y las opciones fijas seleccionadas: revisarlas antes de compartirla.
+
+La extensión Manifest V3 de `extension/ocrtrabajo` se distribuye como ZIP en la página. Reconoce controles HTML visibles en la pestaña activa de la intranet y acumula las secciones en `chrome.storage.session` sin leer valores existentes. La interfaz importa ese esquema y permite elegir los campos, el dato de origen y opciones fijas de desplegables. El intercambio página–extensión es local. El usuario inicia sesión con Google directamente en la intranet.
+
+El rellenado requiere confirmación en la intranet, evita sobrescribir valores y no pulsa Guardar. Puede abrir pestañas con `role=tab` y selectores únicos. Los controles personalizados, las pestañas sin identificadores, las rutas distintas, los adjuntos y los campos que dependen de otros requieren adaptación con el formulario real. Todavía no se ha validado contra una sesión autenticada de Autocarpe. La extracción por etiquetas es orientativa y necesita revisión; no supone reconocimiento semántico completo de un DNI.
+
+Validación adicional: `python3 scripts/check-ocr.py` y `python3 scripts/check-ocr-extension.py` con Playwright y Chromium instalados. Prueba asignaciones, persistencia sin valores personales, limpieza y rellenado de un formulario representativo. Las dependencias están fijadas en package-lock.json. El modelo español de `tessdata_fast` está bajo licencia Apache-2.0; ver `assets/ocr-models/LICENSE`.
