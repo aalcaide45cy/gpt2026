@@ -3,6 +3,7 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 import {sectors} from '../src/sectors.mjs';
 import {posts} from '../src/posts.mjs';
+import {verticals} from '../src/verticals.mjs';
 assert.equal(sectors.length,45);assert.equal(new Set(sectors.map(s=>s.id)).size,45);
 function files(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?files(path.join(dir,e.name)):[path.join(dir,e.name)])}
 const html=files('dist').filter(p=>p.endsWith('.html'));assert.equal(html.length,189);
@@ -11,4 +12,6 @@ for(const file of html){const text=fs.readFileSync(file,'utf8');assert(text.incl
 for(const s of sectors)for(let v=1;v<=3;v++)assert(fs.existsSync(`dist/demos/${s.id}/${v}/index.html`));
 for(const p of posts)assert(fs.existsSync(`dist/motoyayos/blog/${p.id}/index.html`));
 const images=files('dist/assets').filter(f=>/\.(png|jpg|jpeg|gif)$/i.test(f));assert.equal(images.length,0);
+assert.equal(verticals.length,45);
+for(const v of verticals){assert.equal(v.versions.length,3);assert(v.items.length>=3);for(const item of v.items)assert(fs.existsSync(path.join('dist',item.image)),item.image);for(let version=1;version<=3;version++){const page=fs.readFileSync(`dist/demos/${v.id}/${version}/index.html`,'utf8');assert(page.includes('demo-data'));assert(page.includes('checkout-dialog'));assert(page.includes('experience.js'));assert(fs.existsSync(`dist/assets/previews/${v.id}-${version}.webp`));}}
 console.log(`Validated ${html.length} pages and ${links} internal links. 135 demos, 45 sector comparisons, 6 blog articles; all raster assets WebP.`);

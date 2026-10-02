@@ -8,3 +8,6 @@
 .moto .btn.secondary{background:transparent;border-color:#53674d;color:#33432f}
 .versions a{font-size:.875rem}
 .ticket{font-size:.75rem}
+.real-preview{display:block;overflow:hidden;aspect-ratio:640/410;border-bottom:1px solid var(--line);background:#eef0eb}
+.real-preview img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.real-preview:hover img{transform:scale(1.025)}

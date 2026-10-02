@@ -2,6 +2,12 @@
   "name": "estudio-web-catalogo",
   "version": "1.0.0",
   "private": true,
-  "scripts": { "build": "node scripts/build.mjs", "test": "node scripts/check.mjs", "start": "python -m http.server 3000 --directory dist" },
-  "engines": { "node": ">=20" }
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --check src/experience.js && node scripts/check.mjs",
+    "start": "python -m http.server 3000 --directory dist"
+  },
+  "engines": {
+    "node": ">=20"
+  }
 }
