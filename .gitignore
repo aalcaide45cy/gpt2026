@@ -1,5 +1,4 @@
-.next/
+dist/
 node_modules/
+.env*
 .vercel/
-*.log
-.env*.local
