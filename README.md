@@ -30,10 +30,24 @@ La web de prueba anterior se reemplaza por completo en el árbol actual. El hist
 
 ## OCR Trabajo · `/ocrtrabajo/`
 
-Interfaz para OCR local de pedidos y DNI con Tesseract.js (español) y PDF.js. Motor, modelo y workers se sirven desde el propio sitio; los archivos se procesan en el navegador. No hay API de subida. Solo la plantilla de etiquetas y asignaciones se guarda en localStorage; documentos, texto y valores OCR se mantienen en memoria. Descargar una plantilla exporta las reglas y las opciones fijas seleccionadas: revisarlas antes de compartirla.
+Versión 0.2. Interfaz para OCR local de pedidos y DNI con Tesseract.js (español) y PDF.js. Motor, modelo y workers se sirven desde el sitio; no hay API de subida a Vercel. Los archivos, el texto y los valores OCR se mantienen en memoria. `localStorage` conserva la estructura del formulario, las asignaciones, los valores fijos y las reglas. Una plantilla exportada contiene esos valores fijos y las opciones del formulario: revisarla antes de compartirla.
 
-La extensión Manifest V3 de `extension/ocrtrabajo` se distribuye como ZIP en la página. Reconoce controles HTML visibles en la pestaña activa de la intranet y acumula las secciones en `chrome.storage.session` sin leer valores existentes. La interfaz importa ese esquema y permite elegir los campos, el dato de origen y opciones fijas de desplegables. El intercambio página–extensión es local. El usuario inicia sesión con Google directamente en la intranet.
+La extensión Manifest V3 (`extension/ocrtrabajo`) se descarga como ZIP. Reconoce controles HTML, radios, checkboxes y switches ARIA, incluyendo los campos presentes en paneles ocultos. Recorre pestañas ARIA y Bootstrap con destino en la misma página, incluidas pestañas anidadas y paneles que cargan sus controles después del clic. Excluye contraseñas, campos hidden y botones de acción. No copia los valores escritos al esquema. La sesión de Google permanece en la intranet.
 
-El rellenado requiere confirmación en la intranet, evita sobrescribir valores y no pulsa Guardar. Puede abrir pestañas con `role=tab` y selectores únicos. Los controles personalizados, las pestañas sin identificadores, las rutas distintas, los adjuntos y los campos que dependen de otros requieren adaptación con el formulario real. Todavía no se ha validado contra una sesión autenticada de Autocarpe. La extracción por etiquetas es orientativa y necesita revisión; no supone reconocimiento semántico completo de un DNI.
+«Explorar variantes» prueba opciones en un expediente de prueba, acumula campos y registra las selecciones necesarias para que aparezcan. Guarda el estado inicial únicamente en memoria del content script e intenta restaurarlo al finalizar. No puede revertir efectos de autoguardado del servidor. La búsqueda está limitada a 120 estados, 75 segundos, 25 opciones por campo y profundidad 3; prioriza controles recién revelados y explora pares de opciones. El informe indica límites y dependencias no resueltas; no promete explorar todas las combinaciones posibles. No navega a rutas distintas ni entra en iframes.
 
-Validación adicional: `python3 scripts/check-ocr.py` y `python3 scripts/check-ocr-extension.py` con Playwright y Chromium instalados. Prueba asignaciones, persistencia sin valores personales, limpieza y rellenado de un formulario representativo. Las dependencias están fijadas en package-lock.json. El modelo español de `tessdata_fast` está bajo licencia Apache-2.0; ver `assets/ocr-models/LICENSE`.
+Las reglas comparan datos o texto, validan fechas y permiten valores alternativos explícitos ante datos ausentes. El estado del DNI usa su caducidad y el tipo DNI/NIE requiere una letra de control válida. La comparación de domicilios solo declara coincidencia tras normalizar; una diferencia requiere revisión. El OCR por etiquetas es orientativo y debe revisarse con documentos de ejemplo representativos.
+
+El rellenado filtra ramas que no aplican, acciona primero controles de elección, reintenta campos dependientes y comprueba que el navegador haya aceptado el valor. Se confirma en la intranet y el usuario decide si reemplazar valores existentes. No pulsa Guardar. Los inputs de archivo compatibles reciben los documentos elegidos mediante DataTransfer (hasta 20 MB por operación); esto puede iniciar una subida a la intranet, igual que al adjuntar manualmente.
+
+No se ha validado aún contra una sesión autenticada de Autocarpe. Las pruebas usan formularios ficticios con estructura equivalente y la extensión real en Chromium:
+
+```sh
+npm run build
+npm test
+node scripts/check-ocr-rules.mjs
+python3 scripts/check-ocr.py
+python3 scripts/check-ocr-extension.py
+```
+
+Para los scripts Python se necesitan Playwright y Chromium instalados; `check-ocr.py` usa el sitio servido en localhost:3000. El modelo español de tessdata_fast se distribuye bajo Apache-2.0, ver `assets/ocr-models/LICENSE`. Las dependencias están fijadas en package-lock.json.

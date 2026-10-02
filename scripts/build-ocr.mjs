@@ -4,7 +4,7 @@ import path from 'node:path';
 export function buildOCR(root){
  const base=root+'/assets/ocrtrabajo';fs.mkdirSync(base+'/vendor/core',{recursive:true});fs.mkdirSync(root+'/ocrtrabajo',{recursive:true});
  fs.copyFileSync('src/ocrtrabajo/index.html',root+'/ocrtrabajo/index.html');
- for(const file of ['app.js','style.css'])fs.copyFileSync('src/ocrtrabajo/'+file,base+'/'+file);
+ for(const file of ['app.js','style.css','rules.mjs'])fs.copyFileSync('src/ocrtrabajo/'+file,base+'/'+file);
  for(const file of ['tesseract.min.js','worker.min.js'])fs.copyFileSync('node_modules/tesseract.js/dist/'+file,base+'/vendor/'+file);
  for(const file of fs.readdirSync('node_modules/tesseract.js-core').filter(f=>/^tesseract-core.*\.(js|wasm)$/.test(f)))fs.copyFileSync('node_modules/tesseract.js-core/'+file,base+'/vendor/core/'+file);
  for(const file of ['pdf.min.mjs','pdf.worker.min.mjs'])fs.copyFileSync('node_modules/pdfjs-dist/build/'+file,base+'/vendor/'+file);

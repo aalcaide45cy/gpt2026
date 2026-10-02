@@ -1,11 +1,34 @@
-OCR Trabajo — instalación en Chrome o Edge
-1. Descomprime el ZIP en una carpeta de tu ordenador.
-2. Abre chrome://extensions o edge://extensions.
-3. Activa Modo de desarrollador y pulsa Cargar descomprimida.
-4. Selecciona la carpeta que contiene manifest.json.
-5. Recarga la intranet y https://gpt2026.vercel.app/ocrtrabajo/.
-6. Inicia sesión con Google tú mismo. Abre Crear expediente.
-7. En cada pestaña del expediente, pulsa Reconocer campos en la extensión.
-8. Vuelve a OCR Trabajo, importa los campos, procesa documentos y asigna datos.
+OCR Trabajo 0.2 — Chrome / Edge
 
-La versión inicial reconoce los controles HTML estándar visibles. Las pestañas con role=tab e identificador estable pueden recorrerse durante el rellenado. Otros controles personalizados, paneles sin semántica de pestaña y adjuntos requieren adaptación tras revisar un formulario real. No pulsa Guardar ni crea el expediente automáticamente. No lee contraseñas, cookies ni valores existentes. La configuración se guarda localmente; los documentos y datos OCR permanecen en memoria. La extensión no usa un servidor para el intercambio.
+ACTUALIZAR
+1. Descomprime el ZIP y sustituye la carpeta de la versión anterior.
+2. Abre chrome://extensions o edge://extensions y pulsa Recargar en OCR Trabajo.
+3. Recarga la intranet y https://gpt2026.vercel.app/ocrtrabajo/.
+
+PRIMERA INSTALACIÓN
+1. Descomprime el ZIP.
+2. Abre chrome://extensions o edge://extensions.
+3. Activa Modo de desarrollador > Cargar descomprimida.
+4. Elige la carpeta que contiene manifest.json y recarga ambas páginas.
+
+RECONOCER
+Inicia sesión tú mismo y abre un expediente. «Reconocer expediente completo» reúne los controles cargados y recorre pestañas ARIA y Bootstrap de la misma página. No hace falta pulsar el botón en cada pestaña compatible.
+
+EXPLORAR VARIANTES
+En un expediente vacío o de prueba, «Explorar variantes» cambia temporalmente radios, casillas, switches y desplegables. Busca campos que aparecen con cada opción y registra las condiciones necesarias para mostrarlos. Intenta restaurar los valores iniciales; compruébalos al terminar. Si la aplicación guarda automáticamente al seleccionar, esos efectos de servidor no se pueden deshacer desde la extensión. Nunca pulsa botones Guardar, Anular ni otros botones de acción.
+
+La exploración está acotada: 120 estados, 75 segundos, hasta 25 opciones por campo y profundidad 3. Se priorizan las opciones que revelan nuevos controles, y se prueban pares de opciones. No garantiza todas las combinaciones de un formulario arbitrario. El resultado informa de límites y campos no resueltos. Los controles personalizados, iframes y pestañas que navegan a otra dirección necesitan adaptación.
+
+CONFIGURAR
+En OCR Trabajo pulsa Importar campos reconocidos. Marca lo que quieras rellenar y elige:
+- Un dato del documento.
+- Valor predeterminado: la respuesta que quieres aplicar siempre.
+- Reglas: condiciones y resultados, con alternativas explícitas cuando falten datos.
+- Un archivo del DNI o pedido, para controles de adjuntos compatibles.
+
+Guardar configuración conserva en localStorage el esquema, las reglas y valores predeterminados. Los valores extraídos de documentos no se guardan. Al abrir otro expediente, vuelve a reconocer e importar sus campos; tus asignaciones se reutilizan cuando los identificadores se mantienen.
+
+RELLENAR
+Revisa la vista previa. Los campos de variantes incompatibles con las opciones elegidas se indican como No aplica. Los datos desconocidos quedan pendientes salvo que hayas definido un valor alternativo. Para aplicar valores también a campos que ya tienen una opción elegida, activa la casilla correspondiente. La intranet pide confirmación y no se pulsa Guardar.
+
+Los adjuntos se entregan a la intranet y pueden subirse inmediatamente si su formulario funciona así. Máximo 20 MB de adjuntos por operación. El OCR y el intercambio con la extensión se hacen en el dispositivo; Vercel sirve los recursos de la interfaz.
