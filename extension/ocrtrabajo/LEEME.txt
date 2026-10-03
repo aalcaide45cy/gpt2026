@@ -1,4 +1,4 @@
-OCR Trabajo 0.2 — Chrome / Edge
+OCR Trabajo 0.3 — Chrome / Edge
 
 ACTUALIZAR
 1. Descomprime el ZIP y sustituye la carpeta de la versión anterior.
@@ -17,10 +17,14 @@ Inicia sesión tú mismo y abre un expediente. «Reconocer expediente completo»
 EXPLORAR VARIANTES
 En un expediente vacío o de prueba, «Explorar variantes» cambia temporalmente radios, casillas, switches y desplegables. Busca campos que aparecen con cada opción y registra las condiciones necesarias para mostrarlos. Intenta restaurar los valores iniciales; compruébalos al terminar. Si la aplicación guarda automáticamente al seleccionar, esos efectos de servidor no se pueden deshacer desde la extensión. Nunca pulsa botones Guardar, Anular ni otros botones de acción.
 
-La exploración está acotada: 120 estados, 75 segundos, hasta 25 opciones por campo y profundidad 3. Se priorizan las opciones que revelan nuevos controles, y se prueban pares de opciones. No garantiza todas las combinaciones de un formulario arbitrario. El resultado informa de límites y campos no resueltos. Los controles personalizados, iframes y pestañas que navegan a otra dirección necesitan adaptación.
+La exploración está acotada: 120 estados, 75 segundos, hasta 12 opciones por desplegable; excluye catálogos de países, vehículos e instalaciones y profundidad 3. Se priorizan las opciones que revelan nuevos controles, y se prueban pares de opciones. No garantiza todas las combinaciones de un formulario arbitrario. El resultado informa de límites y campos no resueltos. Los controles personalizados, iframes y pestañas que navegan a otra dirección necesitan adaptación.
 
 CONFIGURAR
-En OCR Trabajo pulsa Importar campos reconocidos. Marca lo que quieras rellenar y elige:
+En OCR Trabajo pulsa Importar campos de la extensión y Preparar perfil Autocarpe. Carga pedido y DNI, pulsa Leer documentos y revisa el previo con sus fuentes. Puedes abrir un JSON anterior para preparar la revisión, pero para rellenar necesitas un reconocimiento actual de la extensión 0.3.
+
+Los valores habituales se guardan automáticamente en localStorage. El perfil separa comprador y vendedor, da prioridad al DNI, calcula PFF sin transporte, asigna TTE, mantiene el total completo del pedido y une los extras con « + ». Los descuentos Crédito / Preference identifican financiación. La categoría tribrid y la fecha de un intervalo se eligen en la página.
+
+En Ajustes avanzados puedes marcar lo que quieras rellenar y elegir:
 - Un dato del documento.
 - Valor predeterminado: la respuesta que quieres aplicar siempre.
 - Reglas: condiciones y resultados, con alternativas explícitas cuando falten datos.

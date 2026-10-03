@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OCR Trabajo · Autocarpe",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Reconoce las pestañas de un expediente y aplica reglas locales a texto, opciones, conmutadores y adjuntos.",
   "permissions": [
     "storage"

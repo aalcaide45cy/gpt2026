@@ -18,7 +18,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
     }
     if (!siteAllowed(sender.url)) throw Error('Origen no permitido.');
     const { capture } = await chrome.storage.session.get('capture');
-    if (!capture || capture.version !== 2) throw Error('Actualiza la extensión y pulsa Reconocer expediente completo en la intranet.');
+    if (!capture || capture.version !== 3) throw Error('Actualiza la extensión y pulsa Reconocer expediente completo en la intranet.');
     if (msg.action === 'getScan') return capture;
     if (msg.action === 'fill') {
       const allowed = capture.sections.flatMap(s => s.fields.filter(f => f.selector && f.supported).map(f => ({ ...f, sectionId: s.id, tabTrail: s.tabTrail, tabSelector: s.tabSelector })));

@@ -30,7 +30,7 @@ La web de prueba anterior se reemplaza por completo en el árbol actual. El hist
 
 ## OCR Trabajo · `/ocrtrabajo/`
 
-Versión 0.2. Interfaz para OCR local de pedidos y DNI con Tesseract.js (español) y PDF.js. Motor, modelo y workers se sirven desde el sitio; no hay API de subida a Vercel. Los archivos, el texto y los valores OCR se mantienen en memoria. `localStorage` conserva la estructura del formulario, las asignaciones, los valores fijos y las reglas. Una plantilla exportada contiene esos valores fijos y las opciones del formulario: revisarla antes de compartirla.
+Versión 0.3. Interfaz para OCR local de pedidos y DNI con Tesseract.js (español) y PDF.js. Motor, modelo y workers se sirven desde el sitio; no hay API de subida a Vercel. Los archivos, el texto y los valores OCR se mantienen en memoria. `localStorage` conserva la estructura del formulario, las asignaciones, los valores fijos y las reglas. Una plantilla exportada contiene esos valores fijos y las opciones del formulario: revisarla antes de compartirla.
 
 La extensión Manifest V3 (`extension/ocrtrabajo`) se descarga como ZIP. Reconoce controles HTML, radios, checkboxes y switches ARIA, incluyendo los campos presentes en paneles ocultos. Recorre pestañas ARIA y Bootstrap con destino en la misma página, incluidas pestañas anidadas y paneles que cargan sus controles después del clic. Excluye contraseñas, campos hidden y botones de acción. No copia los valores escritos al esquema. La sesión de Google permanece en la intranet.
 
@@ -51,3 +51,7 @@ python3 scripts/check-ocr-extension.py
 ```
 
 Para los scripts Python se necesitan Playwright y Chromium instalados; `check-ocr.py` usa el sitio servido en localhost:3000. El modelo español de tessdata_fast se distribuye bajo Apache-2.0, ver `assets/ocr-models/LICENSE`. Las dependencias están fijadas en package-lock.json.
+
+El perfil Autocarpe interpreta el resumen comercial de pedidos Renault/Dacia, mantiene la prioridad del DNI, separa marca/modelo/versión/motor y une opciones con « + ». PFF suma modelo, color, tapicería y opciones; TTE es transporte y Total a cobrar no descuenta señal ni vehículo entregado. Los descuentos Crédito/Preference indican financiación. El previo editable muestra procedencia y dudas. Los valores habituales, categoría tribrid y criterio de fecha se configuran localmente. El lector conserva las columnas del PDF y combina orientaciones y lecturas OCR del documento de identidad.
+
+Comprobaciones OCR: scripts/check-ocr-rules.mjs, scripts/check-ocr-autocarpe.mjs, scripts/check-ocr.py (servidor local en 3000) y scripts/check-ocr-extension.py (Playwright/Chromium). Las pruebas del repositorio usan datos ficticios; no incluir documentos reales ni resultados privados. La prueba de la extensión simula la intranet, no sustituye la comprobación en una sesión real de Autocarpe.

@@ -20,9 +20,11 @@ with sync_playwright() as p:
   def scan(action):
    return popup.evaluate("""async action=>{const tabs=await chrome.tabs.query({});const tab=tabs.find(t=>t.url?.startsWith('https://intranet.autocarpe.com/'));return await chrome.runtime.sendMessage({action,tabId:tab.id});}""",action)
   result=scan('scanAll');assert 'error' not in result,result
-  assert len(result['sections'])==2,result
+  assert len(result['sections'])==3,result
   fields=[f for s in result['sections'] for f in s['fields']]
   assert any(f['selector']=='#matricula' for f in fields),fields
+  assert not any(f['selector']=='#modal-field' or f['type']=='combobox' for f in fields)
+  assert next(f for f in fields if f['selector']=='#pedido-file')['label']=='Pedido (*)'
   assert all(f['selector'] not in ['#password','#token'] for f in fields)
   assert any(f['type']=='radio' and len(f['options'])==2 for f in fields)
   assert any(f['selector']=='#switch' and f['type']=='checkbox' for f in fields)
@@ -38,16 +40,18 @@ with sync_playwright() as p:
   assert intranet.evaluate('window.saves===0 && window.cancels===0')
   assert 'Original' not in json.dumps(result)
   print('Variant exploration: discovers conditional/lazy branches, records prerequisites, restores initial choices, never submits.',flush=True)
-  site=ctx.new_page();site.goto('https://gpt2026.vercel.app/ocrtrabajo/');site.wait_for_selector('#sources tr');site.locator('#import').click();site.wait_for_selector('.field-card')
+  site=ctx.new_page();site.on('dialog',lambda d:d.accept());site.goto('https://gpt2026.vercel.app/ocrtrabajo/');site.wait_for_selector('#sources tr',state='attached');site.locator('#import').click();site.wait_for_selector('.field-card',state='attached');site.locator('details').filter(has=site.locator('#mapping')).evaluate('(e)=>e.open=true')
   def card_for(selector):
    return site.locator('.field-card').filter(has=site.locator('select[aria-label="Cómo rellenar '+selector+'"]'))
   def fixed(label,value):
    card=card_for(label);card.locator('input[type=checkbox]').check();card.locator('select').first.select_option('@fixed');card.locator('select').nth(1).select_option(value)
-  fixed('Forma de pago','loan');fixed('DNI en vigor','0');fixed('Familia numerosa','false');fixed('Servicios conectados','true')
+  fixed('Ayuda configurable','yes');fixed('Catálogo','dacia');fixed('Forma de pago','loan');fixed('DNI en vigor','0');fixed('Familia numerosa','false');fixed('Servicios conectados','true')
   card=card_for('Banco');card.locator('input[type=checkbox]').check();card.locator('select').first.select_option('@fixed');card.locator('input[type=text],input:not([type])').fill('Banco ficticio')
+  intranet.evaluate("()=>{const original=document.querySelector('#__BVID__10').closest('.form-group');const copy=original.cloneNode(true);copy.querySelector('label').textContent='Otra ayuda';original.querySelectorAll('input').forEach((e,i)=>{e.id='__BVID__'+(100+i);e.name='__BVID__200'});original.before(copy)}")
   site.locator('#overwrite').check();site.locator('#save').click()
   saved=json.loads(site.evaluate("localStorage.getItem('ocrtrabajo-template-v1')"));assert any(m['fixed']=='false' for m in saved['mappings'].values())
   site.locator('#fill').click();intranet.wait_for_function("document.querySelector('#banco').value==='Banco ficticio'")
+  assert intranet.locator('#__BVID__100').is_checked();assert not intranet.locator('#__BVID__10').is_checked();assert intranet.locator('#catalogo').input_value()=='dacia'
   assert intranet.locator('#financiado').is_checked();assert intranet.locator('#caducado').is_checked();assert not intranet.locator('#numerosa').is_checked()
   assert intranet.locator('#switch').get_attribute('aria-checked')=='true'
   assert intranet.evaluate('window.saves===0 && window.cancels===0')

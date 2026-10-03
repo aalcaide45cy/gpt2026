@@ -63,8 +63,9 @@ function condition(rule, values, texts, today) {
 export function resolve(mapping, field, values, texts, today = new Date()) {
   const pending = reason => ({ready:false,reason});
   if(!mapping?.enabled)return {ready:false,excluded:true,reason:'No seleccionado'};
-  if(!field.selector || field.supported===false || field.readonly)return pending('Necesita adaptación o es de solo lectura');
+  if(!field.selector || field.supported===false || field.readonly || field.disabled)return pending('Necesita adaptación o es de solo lectura');
   if(field.type==='file')return ['@file:dni','@file:pedido'].includes(mapping.source)?{ready:true,fileSource:mapping.source.slice(6),reason:'Adjuntar documento'}:pending('Elige qué documento adjuntar');
+  if(mapping.source==='@fixed'&&mapping.fixed==='@empty'&&field.type==='select-one'&&field.options?.some(o=>o.value===''))return {ready:true,value:'',display:'Sin declaración / sin selección',reason:'Valor habitual explícito'};
   let value='',reason='';
   if(mapping.source==='@fixed') {value=mapping.fixed||'';reason='Valor predeterminado';}
   else if(mapping.source==='@rules') {

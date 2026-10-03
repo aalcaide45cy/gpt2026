@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = 2;
+  const VERSION = 3;
   const controls = 'input,select,textarea,[role="switch"],[role="checkbox"],[role="radio"],[role="combobox"],[contenteditable="true"]';
   const tabQuery = '[role="tab"],[data-toggle="tab"],[data-bs-toggle="tab"],.nav-tabs a[href],.nav-pills a[href]';
   const excluded = new Set(['hidden', 'password', 'submit', 'button', 'reset', 'image']);
@@ -12,18 +12,18 @@
 
   function locate(e) {
     if (!e || e === document.body) return e === document.body ? 'body' : null;
-    if (e.id) { const s = '#' + CSS.escape(e.id); if (unique(s) === e) return s; }
+    if (e.id && !/^__BVID__/.test(e.id)) { const s = '#' + CSS.escape(e.id); if (unique(s) === e) return s; }
     for (const attr of ['name', 'data-testid', 'aria-controls']) {
       const v = e.getAttribute(attr);
-      if (v) { const s = e.tagName.toLowerCase() + '[' + attr + '=' + JSON.stringify(v) + ']'; if (unique(s) === e) return s; }
+      if (v && !/^__BVID__/.test(v)) { const s = e.tagName.toLowerCase() + '[' + attr + '=' + JSON.stringify(v) + ']'; if (unique(s) === e) return s; }
     }
-    if (e.matches('input[type=radio]') && e.name) {
+    if (e.matches('input[type=radio]') && e.name && !/^__BVID__/.test(e.name)) {
       const s = 'input[type="radio"][name=' + JSON.stringify(e.name) + '][value=' + JSON.stringify(e.value) + ']';
       if (unique(s) === e) return s;
     }
     const parts = []; let node = e;
     while (node && node !== document.documentElement) {
-      if (node !== e && node.id && unique('#' + CSS.escape(node.id)) === node) { parts.unshift('#' + CSS.escape(node.id)); break; }
+      if (node !== e && node.id && !/^__BVID__/.test(node.id) && unique('#' + CSS.escape(node.id)) === node) { parts.unshift('#' + CSS.escape(node.id)); break; }
       const siblings = [...node.parentElement?.children || []].filter(x => x.tagName === node.tagName);
       parts.unshift(node.tagName.toLowerCase() + ':nth-of-type(' + (siblings.indexOf(node) + 1) + ')');
       node = node.parentElement;
@@ -31,6 +31,7 @@
     const result = parts.join(' > '); return unique(result) === e ? result : null;
   }
   function labelled(e) {
+    if(e.type==='file'){const heading=e.closest('h1,h2,h3,h4,h5')||e.closest('.form-group')?.querySelector('h2,h3,h4,h5');if(heading){const copy=heading.cloneNode(true);copy.querySelectorAll('input,button,a,.btn,[role=button]').forEach(n=>n.remove());const text=clean(copy.textContent);if(text)return text;}}
     const refs = (e.getAttribute('aria-labelledby') || '').split(/\s+/).filter(Boolean).map(id => document.getElementById(id)?.textContent).join(' ');
     return clean([...e.labels || []].map(l => l.textContent).join(' ') || refs || e.getAttribute('aria-label') || (e.matches('[role]') ? e.textContent : '') || e.placeholder || e.name || e.id);
   }
@@ -51,16 +52,19 @@
     if (!e?.matches(tabQuery) || e.disabled || e.getAttribute('aria-disabled') === 'true') return false;
     if (e.tagName === 'BUTTON' && e.form && e.type === 'submit') return false;
     if (e.tagName === 'A' && e.getAttribute('href')) {
+      if(panelFor(e)&&/^(?:javascript:void\(0\);?|#)$/.test(e.getAttribute('href')))return true;
       const u = new URL(e.href, location.href);
       if (u.origin + u.pathname + u.search !== canonical() || !u.hash) return false;
     }
     return true;
   }
   function panelFor(e) {
-    const aria = e.getAttribute('aria-controls');
-    if (aria && document.getElementById(aria)) return document.getElementById(aria);
-    const target = e.getAttribute('data-bs-target') || e.getAttribute('data-target') || (e.tagName === 'A' ? new URL(e.href, location.href).hash : '');
-    return target?.startsWith('#') ? unique(target) : null;
+    for (const value of [e.getAttribute('aria-controls'),e.getAttribute('data-bs-target'),e.getAttribute('data-target'),e.tagName==='A'?new URL(e.href,location.href).hash:'']) {
+      if (!value) continue;
+      let id=value.replace(/^#/,'');try{id=decodeURIComponent(id);}catch{}
+      const panel=document.getElementById(id);if(panel)return panel;
+    }
+    return null;
   }
   function tabs() {
     return [...document.querySelectorAll(tabQuery)].filter(safeTab).map(e => ({ selector: locate(e), label: clean(e.textContent || e.getAttribute('aria-label')), panelSelector: locate(panelFor(e)) })).filter(t => t.selector);
@@ -92,14 +96,23 @@
     return { id: trail.join('|') || 'general', section: names.join(' › ') || 'General', tabTrail: trail, tabSelector: trail.at(-1) || null };
   }
   function eligible(e) {
-    return (!excluded.has(e.type) || (e.type === 'button' && e.matches('[role=switch],[role=checkbox],[role=radio],[role=combobox]'))) && !e.closest('[data-ocr-ignore]') && !(e.matches('[role]') && !e.matches('input,select,textarea') && e.querySelector('input,select,textarea'));
+    return (!excluded.has(e.type) || (e.type === 'button' && e.matches('[role=switch],[role=checkbox],[role=radio],[role=combobox]'))) && !e.closest('[data-ocr-ignore],.modal,[role=dialog]') && !(e.matches('[role]') && !e.matches('input,select,textarea') && (e.querySelector('input,select,textarea') || (e.closest('.select2-container') && e.closest('.form-group')?.querySelector('select'))));
+  }
+  function semanticKey(context,e,type,label){
+    if(e.id&&!/^__BVID__/.test(e.id))return 'id:'+e.id;
+    return context.section+'|'+type+'|'+clean(label).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  }
+  function liveField(item){
+    const records=snapshot(tabs()).flatMap(s=>s.fields);
+    const matching=item.semanticKey?records.filter(f=>f.semanticKey===item.semanticKey):records.filter(f=>f.selector===item.selector&&f.type===item.type);
+    return matching.length===1?matching[0]:null;
   }
   function shownInSection(e, known) {
     const panels = new Set(known.map(t => unique(t.panelSelector)).filter(Boolean));
     for (let node = e; node && node !== document.body; node = node.parentElement) {
       const style = getComputedStyle(node);
       if ((style.display === 'none' || style.visibility === 'hidden' || node.hidden) && !panels.has(node)) {
-        if (node === e && e.matches('input[type=file],input[type=radio],input[type=checkbox]')) continue;
+        if (node === e && (e.matches('input[type=file],input[type=radio],input[type=checkbox]') || (e.matches('select.select2-hidden-accessible,select[data-select2-id]') && e.closest('.form-group')?.querySelector('.select2-container')))) continue;
         return false;
       }
     }
@@ -143,7 +156,7 @@
       if (seen.has(key)) continue; seen.add(key);
       const options = type === 'radio' ? members.map((r, i) => ({ label: labelled(r), value: r.type === 'radio' ? r.value : r.getAttribute('data-value') || String(i), selector: locate(r), disabled: r.disabled || r.getAttribute('aria-disabled') === 'true' })) : type === 'checkbox' ? [{ label: 'Sí / activado', value: 'true' }, { label: 'No / desactivado', value: 'false' }] : e.tagName === 'SELECT' ? [...e.options].map(o => ({ label: clean(o.textContent), value: o.value, disabled: o.disabled })) : null;
       const supported = !!selector && !['combobox', 'contenteditable', 'select-multiple'].includes(type) && !e.readOnly;
-      const field = { selector, label: type === 'radio' ? groupLabel(e) : labelled(e), type, options, required: members.some(x => x.required || x.getAttribute('aria-required') === 'true'), supported, disabled: members.every(x => x.disabled || x.getAttribute('aria-disabled') === 'true'), readonly: !!e.readOnly, visible: members.some(visible), branchVisible: members.some(x => shownInSection(x, known)), paths: [], accept: type === 'file' ? e.accept : undefined, multiple: type === 'file' ? e.multiple : undefined };
+      const field = { selector, label: type === 'radio' ? groupLabel(e) : labelled(e), type, options, required: members.some(x => x.required || x.getAttribute('aria-required') === 'true'), supported, semanticKey: semanticKey(context,e,type,type==='radio'?groupLabel(e):labelled(e)), disabled: members.every(x => x.disabled || x.getAttribute('aria-disabled') === 'true'), readonly: !!e.readOnly, visible: members.some(visible), branchVisible: members.some(x => shownInSection(x, known)), paths: [], accept: type === 'file' ? e.accept : undefined, multiple: type === 'file' ? e.multiple : undefined };
       if (!field.label) field.label = type === 'file' ? clean(e.closest('section,.form-group')?.querySelector('h2,h3,h4,label')?.textContent) || 'Adjunto' : 'Campo sin etiqueta';
       if (!sections.has(context.id)) sections.set(context.id, { ...context, fields: [] });
       sections.get(context.id).fields.push(field);
@@ -174,7 +187,10 @@
       if (canonical() === start) { try { await openTrail(original); if (location.hash !== originalHash) history.replaceState(history.state, '', start + originalHash); window.scrollTo(scroll.x, scroll.y); } catch {} }
     }
   }
-  function editable(e, file = false) { return e && !e.disabled && !e.readOnly && e.getAttribute('aria-disabled') !== 'true' && eligible(e) && (file || visible(e) || visible(e.closest('label')) || [...e.labels || []].some(visible) || visible(e.closest('[role=radiogroup],.form-check,.custom-control,.radio,.checkbox'))); }
+  function editable(e, file = false) {
+    if(!e || e.disabled || e.readOnly || e.getAttribute('aria-disabled')==='true' || !eligible(e))return false;
+    return file || visible(e) || visible(e.closest('label')) || (e.matches('select.select2-hidden-accessible,select[data-select2-id]') && visible(e.closest('.form-group')?.querySelector('.select2-container'))) || [...e.labels || []].some(visible) || visible(e.closest('[role=radiogroup],.form-check,.custom-control,.radio,.checkbox'));
+  }
   function fire(e) { e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); }
   function verifyType(e, field) {
     if (field.type === 'radio') return e.matches('input[type=radio],[role=radio]');
@@ -183,8 +199,9 @@
   }
   async function apply(item, overwrite) {
     await openTrail(item.tabTrail || (item.tabSelector ? [item.tabSelector] : []));
-    let e = unique(item.selector);
-    for (let i = 0; i < 8 && !editable(e, item.type === 'file'); i++) { await sleep(150); e = unique(item.selector); }
+    let fresh=liveField(item), e=fresh&&unique(fresh.selector);
+    for(let i=0;i<20&&(!editable(e,item.type==='file')||(e?.tagName==='SELECT'&&![...e.options].some(o=>o.value===item.value)));i++){await sleep(150);fresh=liveField(item);e=fresh&&unique(fresh.selector);}
+    if(fresh)item={...item,selector:fresh.selector,options:fresh.options};
     if (!editable(e, item.type === 'file') || !verifyType(e, item)) return 'Campo no disponible o cambió de tipo.';
     if (item.type === 'file') {
       if (e.files.length && !overwrite) return 'Ya contiene un archivo; activa reemplazar si corresponde.';
@@ -267,7 +284,7 @@
     const base=await scan(true),saved=new Map(base.sections.map(s=>[s.id,s]));
     const warnings=[...base.warnings];let explored=0,limited=false;const started=Date.now();
     const seen=new Set(),queue=[];
-    const choices=()=>[...saved.values()].flatMap(s=>s.fields.filter(f=>f.supported&&f.branchVisible&&!f.disabled&&['radio','checkbox','select-one'].includes(f.type)).map(f=>({...f,sectionId:s.id,tabTrail:s.tabTrail})));
+    const choices=()=>[...saved.values()].flatMap(s=>s.fields.filter(f=>f.supported&&f.branchVisible&&!f.disabled&&(['radio','checkbox'].includes(f.type)||(f.type==='select-one'&&(f.options?.length||0)<=12&&!/combustible|instalaci[oó]n|impuesto|servicio|matriculaci[oó]n/i.test(f.label)))).map(f=>({...f,sectionId:s.id,tabTrail:s.tabTrail})));
     const enqueue=(actions,priority=false)=>{
       const key=JSON.stringify(actions.map(a=>[a.sectionId,a.selector,a.value]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b))));
       if(seen.has(key))return;seen.add(key);if(queue.length<3000){if(priority)queue.unshift(actions);else queue.push(actions);}else limited=true;
